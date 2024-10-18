@@ -1,0 +1,158 @@
+
+Restaurant Management System - Java (Spring Boot) API Usage Instructions
+
+## How to Run the Program Using Java, Eclipse, or IntelliJ IDEA
+
+### 1. Setup the Development Environment
+   - Ensure you have the **Java Development Kit (JDK)** installed (preferably JDK 11 or higher).
+   - Install **Eclipse IDE** or **IntelliJ IDEA** as your Integrated Development Environment (IDE).
+   - Install **Maven** (or Gradle) as your build tool.
+
+### 2. Create a New Spring Boot Project
+
+#### In **Eclipse**:
+   - Open Eclipse and go to **File > New > Maven Project**.
+   - Select the **Spring Initializr** template to create a new Spring Boot project.
+   - Enter your project details (Group, Artifact, and dependencies).
+   - Add the following dependencies:
+     - Spring Web
+     - Spring Data JPA
+     - H2 Database (or MySQL if preferred)
+
+#### In **IntelliJ IDEA**:
+   - Open IntelliJ IDEA and go to **File > New Project**.
+   - Select **Spring Initializr**.
+   - Enter your project details (Group, Artifact, and dependencies).
+   - Add the following dependencies:
+     - Spring Web
+     - Spring Data JPA
+     - H2 Database (or MySQL if preferred)
+
+### 3. Configure the `pom.xml` (If Using Maven)
+   - Add the required dependencies for a Spring Boot project. Here is an example of what your `pom.xml` file should include:
+
+```xml
+<dependencies>
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-data-jpa</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>com.h2database</groupId>
+        <artifactId>h2</artifactId>
+        <scope>runtime</scope>
+    </dependency>
+</dependencies>
+```
+
+### 4. Write the API Code
+
+#### a) Create the `Item` Entity:
+   - Create a new class `Item.java` under the `entity` package:
+
+```java
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+
+@Entity
+public class Item {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private String name;
+    private Integer price;
+
+    // Getters and Setters
+}
+```
+
+#### b) Create the `ItemRepository` Interface:
+   - Create a new interface `ItemRepository.java` under the `repository` package:
+
+```java
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface ItemRepository extends JpaRepository<Item, Long> {
+}
+```
+
+#### c) Create the `ItemController` for REST API Endpoints:
+   - Create a new class `ItemController.java` under the `controller` package:
+
+```java
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Optional;
+
+@RestController
+@RequestMapping("/api/items")
+public class ItemController {
+
+    @Autowired
+    private ItemRepository itemRepository;
+
+    // Get all items
+    @GetMapping
+    public List<Item> getAllItems() {
+        return itemRepository.findAll();
+    }
+
+    // Get item by ID
+    @GetMapping("/{id}")
+    public ResponseEntity<Item> getItemById(@PathVariable Long id) {
+        Optional<Item> item = itemRepository.findById(id);
+        return item.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    // Create a new item
+    @PostMapping
+    public Item createItem(@RequestBody Item item) {
+        return itemRepository.save(item);
+    }
+
+    // Update an existing item
+    @PutMapping("/{id}")
+    public ResponseEntity<Item> updateItem(@PathVariable Long id, @RequestBody Item updatedItem) {
+        return itemRepository.findById(id).map(item -> {
+            item.setName(updatedItem.getName());
+            item.setPrice(updatedItem.getPrice());
+            itemRepository.save(item);
+            return ResponseEntity.ok(item);
+        }).orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    // Delete an item
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteItem(@PathVariable Long id) {
+        itemRepository.deleteById(id);
+        return ResponseEntity.ok().build();
+    }
+}
+```
+
+### 5. Run the Spring Boot Application
+
+#### In **Eclipse**:
+   - Right-click on the project and select **Run As > Spring Boot App**.
+   - Alternatively, go to the `main` method in your main application class and run it.
+
+#### In **IntelliJ IDEA**:
+   - Click on the green arrow in the main class to run the Spring Boot application.
+   - You can also use **Run > Run 'Application'**.
+
+### 6. Test the API Endpoints
+   - Use Postman, curl, or a browser to test the API endpoints:
+     - `GET /api/items` to retrieve all items.
+     - `GET /api/items/{id}` to retrieve an item by ID.
+     - `POST /api/items` to create a new item.
+     - `PUT /api/items/{id}` to update an item.
+     - `DELETE /api/items/{id}` to delete an item.
